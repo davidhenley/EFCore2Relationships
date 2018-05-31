@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SamuraiApp.Domain
+namespace ClassLibrary1
 {
     public class Class1
     {
