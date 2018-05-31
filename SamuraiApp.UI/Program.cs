@@ -26,13 +26,97 @@ namespace SamuraiApp.UI
 
             // AddNewSamuraiViaDisconnectedBattleObject();
 
+
             // GetSamuraiWithBattles(8);
 
             // RemoveJoinBetweenSamuraiAndBattleSimple();
 
             // RemoveBattleFromSamurai();
 
+            /**
+             * ONE TO ONE RELATIONSHIPS
+             */
+
+            // AddNewSamuraiWithSecretIdentity();
+
+            // AddSecretIdentityUsingSamuraiId();
+
+            // AddSecretIdentityToExistingSamurai();
+
+            // ReplaceASecretIdentity();
+
+            // ReplaceASecretIdentityNotTracked();
+
+            ReplaceASecretIdentityNotInMemory();
+
             Console.ReadLine();
+        }
+
+        // DOES NOT WORK UNLESS NULLABLE
+        // Will throw an exception of duplicate key
+        private static void ReplaceASecretIdentityNotInMemory()
+        {
+            var samurai = _context.Samurais.FirstOrDefault(s => s.Id == 8);
+            samurai.SecretIdentity = new SecretIdentity { RealName = "David" };
+            _context.SaveChanges();
+        }
+
+        // DOES NOT WORK UNLESS NULLABLE
+        // Will throw an exception because of duplicate key
+        private static void ReplaceASecretIdentityNotTracked()
+        {
+            Samurai samurai;
+            using (var separateOperation = new SamuraiContext())
+            {
+                samurai = separateOperation.Samurais
+                    .Include(s => s.SecretIdentity)
+                    .FirstOrDefault(s => s.Id == 8);
+            }
+            samurai.SecretIdentity = new SecretIdentity { RealName = "David" };
+            _context.Samurais.Attach(samurai);
+            _context.SaveChanges();
+        }
+
+        // EF Core will delete the old one and add a new one only if tracked
+        private static void ReplaceASecretIdentity()
+        {
+            var samurai = _context.Samurais
+                .Include(s => s.SecretIdentity)
+                .FirstOrDefault(s => s.Id == 8);
+
+            samurai.SecretIdentity = new SecretIdentity { RealName = "Sampson" };
+            _context.SaveChanges();
+        }
+
+        // Add secret identity to samurai already in memory
+        private static void AddSecretIdentityToExistingSamurai()
+        {
+            Samurai samurai;
+            using (var separateOperation = new SamuraiContext())
+            {
+                samurai = _context.Samurais.Find(9);
+            }
+            samurai.SecretIdentity = new SecretIdentity { RealName = "Julia" };
+            _context.Samurais.Attach(samurai);
+            _context.SaveChanges();
+        }
+
+        // Add secret identity to existing samurai
+        private static void AddSecretIdentityUsingSamuraiId()
+        {
+            // If you already have the samuraiId but not in memory
+            var identity = new SecretIdentity { RealName = "David", SamuraiId = 8 };
+            _context.Add(identity); // Since you don't have a DbSet of SecretIdentity you can add directly on context
+            _context.SaveChanges();
+        }
+
+        // Adds secret identity to newly created samurai
+        private static void AddNewSamuraiWithSecretIdentity()
+        {
+            var samurai = new Samurai { Name = "Jina Ujichika" };
+            samurai.SecretIdentity = new SecretIdentity { RealName = "Julie" };
+            _context.Samurais.Add(samurai);
+            _context.SaveChanges();
         }
 
         // Remove battle from already in memory samurai
